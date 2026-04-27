@@ -26,11 +26,9 @@ const CONFIG = {
 // Mirrors the Google Sheet's data validation list. The dropdown, legend, stats
 // banner, and color styles all read from this — change once, propagate everywhere.
 const CANONICAL_STATUSES = [
-  { value: 'Proposed',    label: 'Proposed',    swatch: '#854d0e', card: 'bg-yellow-950/50 border-yellow-700/60',   badge: 'bg-yellow-500/15 text-yellow-300 border border-yellow-500/40' },
-  { value: 'Not started', label: 'Not started', swatch: '#374151', card: 'bg-white/[.04] border-white/15',           badge: 'bg-white/10 text-gray-300 border border-white/20' },
-  { value: 'Planned',     label: 'Planned',     swatch: '#1e3a8a', card: 'bg-blue-950/50 border-blue-700/60',        badge: 'bg-blue-500/15 text-blue-300 border border-blue-500/40' },
-  { value: 'In progress', label: 'In progress', swatch: '#7c2d12', card: 'bg-orange-950/40 border-orange-700/60',    badge: 'bg-orange-500/15 text-orange-300 border border-orange-500/40' },
-  { value: 'Built',       label: 'Built',       swatch: '#379E5C', card: 'bg-[#379E5C]/15 border-[#379E5C]/60',      badge: 'bg-[#379E5C]/20 text-[#9bd9b1] border border-[#379E5C]/50' },
+  { value: 'Not started', label: 'Not started', swatch: '#374151', card: 'bg-white/[.04] border-white/15',        badge: 'bg-white/10 text-gray-300 border border-white/20' },
+  { value: 'In progress', label: 'In progress', swatch: '#7c2d12', card: 'bg-orange-950/40 border-orange-700/60', badge: 'bg-orange-500/15 text-orange-300 border border-orange-500/40' },
+  { value: 'Built',       label: 'Built',       swatch: '#379E5C', card: 'bg-[#379E5C]/15 border-[#379E5C]/60',   badge: 'bg-[#379E5C]/20 text-[#9bd9b1] border border-[#379E5C]/50' },
 ];
 
 const STATUS_BY_VALUE = Object.fromEntries(CANONICAL_STATUSES.map(s => [s.value, s]));
@@ -148,8 +146,6 @@ function renderStats(skills) {
       const colorClass =
         s.value === 'Built'       ? 'text-ig-green' :
         s.value === 'In progress' ? 'text-orange-400' :
-        s.value === 'Planned'     ? 'text-blue-400' :
-        s.value === 'Proposed'    ? 'text-yellow-400' :
                                      'text-gray-400';
       return `<span class="text-sm ${colorClass} font-bold">${n} ${s.label.toLowerCase()}</span>`;
     })
