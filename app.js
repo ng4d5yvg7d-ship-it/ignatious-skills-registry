@@ -350,8 +350,10 @@ function renderGrid(skills) {
       <tr class="border-t border-white/5 hover:bg-white/[.03]"
           data-name="${escapeHtml(getCol(s, 'Name')).toLowerCase()}"
           data-status="${escapeHtml(status)}"
+          data-owner="${owner ? escapeHtml(owner) : '__unowned__'}"
           data-orchestrator="${escapeHtml(getCol(s, 'Primary Orchestrator'))}"
-          data-category="${escapeHtml(category)}">
+          data-category="${escapeHtml(category)}"
+          data-score="${score || ''}">
         <td class="px-3 py-2 font-bold">${escapeHtml(getCol(s, 'Name'))}</td>
         <td class="px-3 py-2"><span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded ${styles.badge}">${status}</span></td>
         <td class="px-3 py-2 text-gray-300">${owner ? escapeHtml(owner) : '<span class="text-gray-500 italic">Partner TBD</span>'}</td>
@@ -365,25 +367,31 @@ function renderGrid(skills) {
 }
 
 function setupFilters() {
-  const search = document.getElementById('search');
-  const fStatus = document.getElementById('filter-status');
-  const fOrch = document.getElementById('filter-orchestrator');
-  const fCat = document.getElementById('filter-category');
-  const countEl = document.getElementById('grid-count');
+  const search   = document.getElementById('search');
+  const fStatus  = document.getElementById('filter-status');
+  const fOwner   = document.getElementById('filter-owner');
+  const fCat     = document.getElementById('filter-category');
+  const fScore   = document.getElementById('filter-score');
+  const fOrch    = document.getElementById('filter-orchestrator');
+  const countEl  = document.getElementById('grid-count');
   const rows = () => document.querySelectorAll('#grid-rows tr');
 
   function apply() {
-    const q = search.value.toLowerCase().trim();
+    const q  = search.value.toLowerCase().trim();
     const st = fStatus.value;
-    const or = fOrch.value;
+    const ow = fOwner.value;
     const ca = fCat.value;
+    const sc = fScore.value;
+    const or = fOrch.value;
     let visible = 0;
     rows().forEach(row => {
       const ok =
-        (!q || row.dataset.name.includes(q)) &&
+        (!q  || row.dataset.name.includes(q)) &&
         (!st || row.dataset.status === st) &&
-        (!or || row.dataset.orchestrator === or) &&
-        (!ca || row.dataset.category === ca);
+        (!ow || row.dataset.owner === ow) &&
+        (!ca || row.dataset.category === ca) &&
+        (!sc || row.dataset.score === sc) &&
+        (!or || row.dataset.orchestrator === or);
       row.style.display = ok ? '' : 'none';
       if (ok) visible++;
     });
@@ -391,7 +399,7 @@ function setupFilters() {
     countEl.textContent = visible === total ? `${total} skills` : `${visible} of ${total} skills`;
   }
 
-  [search, fStatus, fOrch, fCat].forEach(el => {
+  [search, fStatus, fOwner, fCat, fScore, fOrch].forEach(el => {
     el.addEventListener('input', apply);
     el.addEventListener('change', apply);
   });
@@ -423,6 +431,23 @@ async function main() {
     document.getElementById('filter-category').insertAdjacentHTML(
       'beforeend',
       cats.map(c => `<option>${escapeHtml(c)}</option>`).join('')
+    );
+
+    // Owner dropdown — named owners alphabetically, then "Partner TBD" if any blanks exist.
+    const owners = [...new Set(skills.map(s => getCol(s, 'Owner')).filter(Boolean))].sort();
+    const hasUnowned = skills.some(s => !getCol(s, 'Owner'));
+    document.getElementById('filter-owner').insertAdjacentHTML(
+      'beforeend',
+      owners.map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('') +
+      (hasUnowned ? `<option value="__unowned__">Partner TBD</option>` : '')
+    );
+
+    // Score dropdown — distinct scores present in the data, descending.
+    const scores = [...new Set(skills.map(s => getScore(s)).filter(Boolean))]
+      .map(Number).sort((a, b) => b - a);
+    document.getElementById('filter-score').insertAdjacentHTML(
+      'beforeend',
+      scores.map(s => `<option>${s}</option>`).join('')
     );
 
     renderStats(skills);
