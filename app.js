@@ -75,7 +75,12 @@ function validateSchema(rows, tabName) {
 }
 
 async function fetchCsv(url) {
-  const res = await fetch(url);
+  // Cache-busting: append a unique query param + tell the browser not to
+  // serve from its own cache. (Google's CDN still caches published-to-web
+  // CSVs for 1–5 min; we can't bypass that — only wait it out.)
+  const sep = url.includes('?') ? '&' : '?';
+  const bustedUrl = `${url}${sep}_t=${Date.now()}`;
+  const res = await fetch(bustedUrl, { cache: 'no-store' });
   if (!res.ok) throw new Error(`Fetch ${url} → HTTP ${res.status}`);
   const text = await res.text();
   return new Promise((resolve, reject) => {
