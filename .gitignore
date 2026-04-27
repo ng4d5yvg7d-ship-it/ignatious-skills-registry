@@ -1,0 +1,16 @@
+# Dev fallback CSVs — contain real firm names and confidential implementation notes.
+# Dashboard reads from live Google Sheets URLs in production; this folder is dev-only.
+data/
+
+# macOS
+.DS_Store
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+
+# Node — in case anyone adds a build step later
+node_modules/
+.next/
+.vercel/

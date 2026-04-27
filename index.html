@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ignatious · Skill Roadmap</title>
+  <link rel="icon" href="./assets/logo-dark-bg.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Ignatious brand palette + Arial typography (per brand guide)
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ig: {
+              green: '#379E5C',     // primary accent
+              olive: '#9BBB32',
+              teal: '#03A39B',
+              forest: '#00513F',
+              steel: '#0169B8',
+              sky: '#63C9F9',
+              charcoal: '#202020',
+              gray: '#E7E6E6',
+            },
+          },
+          fontFamily: {
+            sans: ['Arial', 'Helvetica', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; }
+    .skill-card { transition: transform 120ms ease, border-color 120ms ease; }
+    .skill-card:hover { transform: translateY(-1px); }
+    /* Dark theme select chevron */
+    select { background-image: linear-gradient(45deg, transparent 50%, #94a3b8 50%), linear-gradient(135deg, #94a3b8 50%, transparent 50%); background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50%; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; appearance: none; padding-right: 24px; }
+    /* Brand cover/closing-style gradient backdrop, applied subtly to header */
+    .ig-gradient-header {
+      background:
+        radial-gradient(1200px 280px at 12% 110%, rgba(55, 158, 92, 0.18), transparent 60%),
+        radial-gradient(900px 240px at 88% -20%, rgba(3, 163, 155, 0.14), transparent 60%),
+        #000000;
+    }
+    /* Dashed callout border (per brand guide) */
+    .ig-callout { border: 1px dashed #4b5563; border-radius: 8px; }
+  </style>
+</head>
+<body class="bg-black text-white min-h-screen antialiased">
+
+  <!-- Loading -->
+  <div id="loading" class="min-h-screen flex items-center justify-center">
+    <div class="text-gray-500 text-sm tracking-wide">Loading registry…</div>
+  </div>
+
+  <!-- Error -->
+  <div id="error" class="hidden min-h-screen items-center justify-center p-8">
+    <div class="max-w-2xl bg-rose-950/40 border border-rose-800 rounded-lg p-6">
+      <h2 class="text-rose-300 font-semibold mb-2">Failed to load registry</h2>
+      <pre id="error-text" class="text-xs text-rose-200/80 whitespace-pre-wrap font-mono"></pre>
+    </div>
+  </div>
+
+  <!-- App -->
+  <div id="app" class="hidden">
+
+    <header class="ig-gradient-header border-b border-white/10 sticky top-0 z-10 backdrop-blur">
+      <div class="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between gap-6">
+        <div class="flex items-center gap-4 min-w-0">
+          <img src="./assets/logo-dark-bg.png" alt="Ignatious" class="h-7 w-auto select-none" draggable="false" />
+          <div class="hidden md:block w-px h-7 bg-white/15"></div>
+          <div class="min-w-0">
+            <h1 class="text-base md:text-lg font-bold tracking-[0.18em] text-white truncate">SKILL ROADMAP</h1>
+            <p class="text-[11px] text-gray-300/80 mt-0.5 truncate">Live registry of every Claude skill — built, planned, proposed</p>
+          </div>
+        </div>
+        <a id="open-registry" href="#" target="_blank" rel="noopener"
+           class="shrink-0 text-sm bg-ig-green hover:bg-[#2a8048] text-white font-bold px-4 py-2 rounded-md transition tracking-wide">
+          Open registry →
+        </a>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 pb-12">
+
+      <!-- Stats banner -->
+      <section class="pt-6">
+        <div id="stats" class="bg-ig-charcoal/80 border border-white/10 rounded-lg p-5"></div>
+      </section>
+
+      <!-- Org chart -->
+      <section class="pt-8">
+        <div class="flex items-center justify-between mb-3 gap-3 flex-wrap">
+          <h2 class="text-[11px] uppercase tracking-[0.2em] text-ig-green font-bold">Skill Org Chart</h2>
+          <div class="flex items-center gap-3">
+            <div id="view-toggle" class="flex bg-black border border-white/15 rounded p-0.5">
+              <button data-view="orchestrator" class="px-3 py-1 text-[10px] uppercase tracking-wider rounded transition font-bold">By Orchestrator</button>
+              <button data-view="category" class="px-3 py-1 text-[10px] uppercase tracking-wider rounded transition font-bold">By Category</button>
+            </div>
+            <div class="text-[10px] text-gray-500 hidden md:block">Sorted by Priority Score</div>
+          </div>
+        </div>
+        <div id="orgchart" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3"></div>
+      </section>
+
+      <!-- Status legend -->
+      <section class="pt-3">
+        <div id="legend" class="flex flex-wrap gap-3 text-[10px] text-gray-400"></div>
+      </section>
+
+      <!-- Platform / cross-cutting (no orchestrator) -->
+      <section id="platform-section" class="pt-8">
+        <h2 class="text-[11px] uppercase tracking-[0.2em] text-ig-green font-bold mb-3">Platform & Cross-Cutting</h2>
+        <div id="platform" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+      </section>
+
+      <!-- Filterable grid -->
+      <section class="pt-10">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-[11px] uppercase tracking-[0.2em] text-ig-green font-bold">All Skills</h2>
+          <div id="grid-count" class="text-xs text-gray-500"></div>
+        </div>
+        <div class="bg-ig-charcoal/80 border border-white/10 rounded-lg overflow-hidden">
+          <div class="p-3 border-b border-white/10 flex flex-wrap gap-2">
+            <input id="search" type="search" placeholder="Search skills…"
+                   class="flex-1 min-w-[200px] bg-black border border-white/15 rounded px-3 py-1.5 text-sm placeholder-gray-500 focus:outline-none focus:border-ig-green" />
+            <select id="filter-status" class="bg-black border border-white/15 rounded px-3 py-1.5 text-sm">
+              <option value="">All statuses</option>
+            </select>
+            <select id="filter-orchestrator" class="bg-black border border-white/15 rounded px-3 py-1.5 text-sm">
+              <option value="">All orchestrators</option>
+            </select>
+            <select id="filter-category" class="bg-black border border-white/15 rounded px-3 py-1.5 text-sm">
+              <option value="">All categories</option>
+            </select>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="text-[10px] uppercase tracking-[0.15em] text-gray-400">
+                <tr class="bg-black/40">
+                  <th class="px-3 py-2 text-left font-bold">Skill</th>
+                  <th class="px-3 py-2 text-left font-bold">Status</th>
+                  <th class="px-3 py-2 text-left font-bold">Owner</th>
+                  <th class="px-3 py-2 text-left font-bold">Category</th>
+                  <th class="px-3 py-2 text-right font-bold">Score</th>
+                  <th class="px-3 py-2 text-left font-bold">Orchestrator</th>
+                  <th class="px-3 py-2 text-left font-bold">Interested</th>
+                </tr>
+              </thead>
+              <tbody id="grid-rows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="border-t border-white/10 py-4 text-center text-[10px] uppercase tracking-[0.2em] text-gray-500">
+      Ignatious · AI Infrastructure Roadmap · Confidential
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
