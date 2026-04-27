@@ -67,6 +67,17 @@ function getScore(row) {
   return key ? (row[key] ?? '').toString().trim() : '';
 }
 
+// Compact orchestrator names so they fit on cards. Strips "Builder"/"Runner"
+// suffixes and abbreviates a couple of long ones.
+function abbrevOrch(name) {
+  return name
+    .replace(/\s+Builder$/i, '')
+    .replace(/\s+Runner$/i, '')
+    .replace(/Market Intelligence/i, 'Mkt Intel')
+    .replace(/Management Presentation/i, 'Mgmt Presentation')
+    .trim();
+}
+
 function validateSchema(rows, tabName) {
   if (!rows.length) throw new Error(`${tabName} CSV is empty`);
   const expected = EXPECTED[tabName];
@@ -191,6 +202,12 @@ function skillCardHtml(skill, subtextField = 'category') {
   const subtext = subtextField === 'category'
     ? getCol(skill, 'Category')
     : getCol(skill, 'Primary Orchestrator');
+
+  // Also Serves: secondary orchestrators this skill feeds. De-dupe primary out.
+  const primary = getCol(skill, 'Primary Orchestrator');
+  const alsoServes = getCol(skill, 'Also Serves')
+    .split(',').map(x => x.trim()).filter(x => x && x !== primary);
+
   return `
     <div class="skill-card border ${styles.card} rounded p-2.5"
          title="${escapeHtml(desc)}">
@@ -203,6 +220,11 @@ function skillCardHtml(skill, subtextField = 'category') {
           ${intCount ? `<span class="text-gray-300">●${intCount}</span>` : ''}
         </span>
       </div>
+
+      ${alsoServes.length ? `
+        <div class="mt-1.5 text-[10px] leading-tight truncate" style="color: #5fc77f;">
+          <span class="text-gray-500 mr-1">↗ also:</span>${escapeHtml(alsoServes.map(abbrevOrch).join(', '))}
+        </div>` : ''}
 
       ${subtext ? `<div class="mt-1 text-[9px] uppercase tracking-[0.1em] text-gray-500 truncate">${escapeHtml(subtext)}</div>` : ''}
     </div>
