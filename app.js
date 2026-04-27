@@ -59,6 +59,14 @@ function getCol(row, name) {
   return key ? (row[key] ?? '').toString().trim() : '';
 }
 
+// Tolerant score lookup — matches any column whose first-line header ends in
+// "Score" (case-insensitive). Survives renames like "Priority Score" →
+// "Assigned Score" → "Perceived Score" without code changes.
+function getScore(row) {
+  const key = Object.keys(row).find(k => /score\s*$/i.test(k.split(/\n|\r/)[0].trim()));
+  return key ? (row[key] ?? '').toString().trim() : '';
+}
+
 function validateSchema(rows, tabName) {
   if (!rows.length) throw new Error(`${tabName} CSV is empty`);
   const expected = EXPECTED[tabName];
@@ -177,7 +185,7 @@ function skillCardHtml(skill, subtextField = 'category') {
   const styles = STATUS_BY_VALUE[status] || STATUS_BY_VALUE['Not started'];
   const interested = getCol(skill, 'Interested');
   const intCount = interested.split(',').filter(x => x.trim()).length;
-  const score = getCol(skill, 'Priority Score');
+  const score = getScore(skill);
   const owner = getCol(skill, 'Owner');
   const desc = getCol(skill, 'Description');
   const subtext = subtextField === 'category'
@@ -223,7 +231,7 @@ function renderOrgChart(skills, orchestrators) {
       const orchName = getCol(orch, 'Name');
       const inCol = skills
         .filter(s => getCol(s, 'Primary Orchestrator') === orchName)
-        .sort((a, b) => (parseFloat(getCol(b, 'Priority Score')) || 0) - (parseFloat(getCol(a, 'Priority Score')) || 0));
+        .sort((a, b) => (parseFloat(getScore(b)) || 0) - (parseFloat(getScore(a)) || 0));
       return `
         <div class="flex flex-col gap-2">
           ${columnHeader(orchName)}
@@ -241,7 +249,7 @@ function renderOrgChart(skills, orchestrators) {
     if (platform.length) {
       platSection.style.display = '';
       document.getElementById('platform').innerHTML = platform
-        .sort((a, b) => (parseFloat(getCol(b, 'Priority Score')) || 0) - (parseFloat(getCol(a, 'Priority Score')) || 0))
+        .sort((a, b) => (parseFloat(getScore(b)) || 0) - (parseFloat(getScore(a)) || 0))
         .map(s => skillCardHtml(s, 'category')).join('');
     } else {
       platSection.style.display = 'none';
@@ -265,7 +273,7 @@ function renderOrgChart(skills, orchestrators) {
     orgEl.innerHTML = ordered.map(cat => {
       const inCol = skills
         .filter(s => getCol(s, 'Category') === cat)
-        .sort((a, b) => (parseFloat(getCol(b, 'Priority Score')) || 0) - (parseFloat(getCol(a, 'Priority Score')) || 0));
+        .sort((a, b) => (parseFloat(getScore(b)) || 0) - (parseFloat(getScore(a)) || 0));
       return `
         <div class="flex flex-col gap-2">
           ${columnHeader(cat)}
@@ -306,14 +314,14 @@ function setupViewToggle(skills, orchestrators) {
 
 function renderGrid(skills) {
   const sorted = [...skills].sort((a, b) =>
-    (parseFloat(getCol(b, 'Priority Score')) || 0) - (parseFloat(getCol(a, 'Priority Score')) || 0)
+    (parseFloat(getScore(b)) || 0) - (parseFloat(getScore(a)) || 0)
   );
   document.getElementById('grid-rows').innerHTML = sorted.map(s => {
     const status = getCol(s, 'Status') || 'Not started';
     const styles = STATUS_BY_VALUE[status] || STATUS_BY_VALUE['Not started'];
     const interested = getCol(s, 'Interested');
     const intList = interested.split(',').map(x => x.trim()).filter(Boolean);
-    const score = getCol(s, 'Priority Score');
+    const score = getScore(s);
     const owner = getCol(s, 'Owner');
     const category = getCol(s, 'Category');
     return `
