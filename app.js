@@ -208,10 +208,17 @@ function skillCardHtml(skill, subtextField = 'category') {
   const alsoServes = getCol(skill, 'Also Serves')
     .split(',').map(x => x.trim()).filter(x => x && x !== primary);
 
+  // Skill File Link: only render as clickable when the column holds a real URL.
+  const fileLink = getCol(skill, 'Skill File Link');
+  const isUrl = /^https?:\/\//i.test(fileLink);
+  const nameHtml = isUrl
+    ? `<a href="${escapeHtml(fileLink)}" target="_blank" rel="noopener" class="text-white hover:text-ig-green transition">${escapeHtml(getCol(skill, 'Name'))} <span class="text-[9px] opacity-60">↗</span></a>`
+    : escapeHtml(getCol(skill, 'Name'));
+
   return `
     <div class="skill-card border ${styles.card} rounded p-2.5"
          title="${escapeHtml(desc)}">
-      <div class="text-[12px] font-bold leading-snug text-white">${escapeHtml(getCol(skill, 'Name'))}</div>
+      <div class="text-[12px] font-bold leading-snug text-white">${nameHtml}</div>
 
       <div class="mt-1.5 flex items-center justify-between gap-2 text-[10px] leading-tight">
         <span class="text-gray-300 truncate">${owner ? escapeHtml(owner) : '<span class="text-gray-500 italic">Partner TBD</span>'}</span>
@@ -346,6 +353,11 @@ function renderGrid(skills) {
     const score = getScore(s);
     const owner = getCol(s, 'Owner');
     const category = getCol(s, 'Category');
+    const fileLink = getCol(s, 'Skill File Link');
+    const isUrl = /^https?:\/\//i.test(fileLink);
+    const tableNameHtml = isUrl
+      ? `<a href="${escapeHtml(fileLink)}" target="_blank" rel="noopener" class="hover:text-ig-green transition">${escapeHtml(getCol(s, 'Name'))} <span class="text-[9px] opacity-60">↗</span></a>`
+      : escapeHtml(getCol(s, 'Name'));
     return `
       <tr class="border-t border-white/5 hover:bg-white/[.03]"
           data-name="${escapeHtml(getCol(s, 'Name')).toLowerCase()}"
@@ -354,7 +366,7 @@ function renderGrid(skills) {
           data-orchestrator="${escapeHtml(getCol(s, 'Primary Orchestrator'))}"
           data-category="${escapeHtml(category)}"
           data-score="${score || ''}">
-        <td class="px-3 py-2 font-bold">${escapeHtml(getCol(s, 'Name'))}</td>
+        <td class="px-3 py-2 font-bold">${tableNameHtml}</td>
         <td class="px-3 py-2"><span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded ${styles.badge}">${status}</span></td>
         <td class="px-3 py-2 text-gray-300">${owner ? escapeHtml(owner) : '<span class="text-gray-500 italic">Partner TBD</span>'}</td>
         <td class="px-3 py-2 text-gray-400 text-xs">${escapeHtml(category) || '<span class="text-gray-600">—</span>'}</td>
